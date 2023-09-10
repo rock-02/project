@@ -250,5 +250,36 @@ exports.updateRole = catchAsyncError(async (req, res, next) => {
   });
 });
 
-// !
+// !getSIngle User -Admin
+
+exports.getSingleUser = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById({ _id: req.params.id });
+
+  if (!user) {
+    return next(ErrorHandler(404, "user Not regestered"));
+  }
+
+  res.status(200).json({
+    sucess: true,
+    msg: user,
+  });
+});
+
+//!DeleteUSer -Admin
+
+exports.deleteUser = catchAsyncError(async (req, res, next) => {
+  const user = await User.findByIdAndDelete({ _id: req.params.id });
+
+  if (!user) {
+    return next(ErrorHandler(404, "user Not regestered"));
+  }
+
+  res.status(200).json({
+    sucess: true,
+    msg: "User deleted Successfully",
+    user,
+  });
+});
+
+
 
