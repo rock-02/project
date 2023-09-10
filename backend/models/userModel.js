@@ -1,20 +1,20 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const JWT = require("jsonwebtoken");
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const JWT = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, "Name required"],
+    required: [true, 'Name required'],
   },
   email: {
     type: String,
-    required: [true, "Email required"],
+    required: [true, 'Email required'],
     unique: true,
   },
   password: {
     type: String,
-    required: [true, "Email required"],
+    required: [true, 'Email required'],
     minLength: 8,
     select: false,
   },
@@ -36,13 +36,19 @@ const userSchema = new mongoose.Schema({
   followers: [
     {
       type: mongoose.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
   ],
   following: [
     {
       type: mongoose.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
+    },
+  ],
+  followRequest: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: 'User',
     },
   ],
 
@@ -53,8 +59,8 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
 });
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) {
+userSchema.pre('save', async function () {
+  if (!this.isModified('password')) {
     return next();
   }
   this.password = await bcrypt.hash(this.password, 10);
@@ -78,5 +84,5 @@ userSchema.methods = {
     return await bcrypt.compare(password, this.password);
   },
 };
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model('User', userSchema);
 module.exports = User;

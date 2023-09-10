@@ -7,11 +7,11 @@ const sendToken = (user, res, statusCode) => {
     ),
     httpOnly: true,
   };
-  
-  res.status(statusCode).cookie("token", token, cookieOptions).json({
+
+  res.status(statusCode).cookie('token ', token, cookieOptions).json({
     sucess: true,
     token: token,
-    msg: "Token Generated",
+    msg: 'Token Generated',
   });
 };
 module.exports = sendToken;
