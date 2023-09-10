@@ -1,18 +1,35 @@
-const JWT = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 
 const isLoggedIn = async (req, res, next) => {
-  const token = req.cookie.token;
+  console.log(req.cookies);
+  const { token } = req.cookies;
+  console.log(token);
 
   if (!token) {
-    res.status(400).json({
-      sucess: false,
-      msg: "Invalid Token Please log in",
+    // return next(new ErrorHandler("Please Login", 401));
+    return res.json({
+      success: "Login failed due to missing token",
     });
   }
 
-  const user = JWT.verify(process.env.JWT_SECRET, token);
+  try {
+    const user = jwt.verify(token, process.env.JWT_SECRET);
 
-  req.user = user;
+    if (!user) {
+      return res.json({
+        success: "Login failed due to unauthorized token",
+      });
+    }
 
-  next();
+    console.log(user);
+    req.user = user;
+    next();
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      error: "Internal Server Error",
+    });
+  }
 };
+
+module.exports = isLoggedIn;
