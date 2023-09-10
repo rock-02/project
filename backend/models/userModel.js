@@ -27,6 +27,24 @@ const userSchema = new mongoose.Schema({
       type: String,
     },
   },
+  role: {
+    type: String,
+    default: "user",
+  },
+  additionalDetails: {
+    firstName: {
+      type: String,
+    },
+    lastName: {
+      type: String,
+    },
+    dateOfBirth: {
+      type: String,
+    },
+    mobileNUmber: {
+      type: String,
+    },
+  },
   posts: [
     {
       name: {

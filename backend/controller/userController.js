@@ -4,6 +4,7 @@ const User = require("../models/userModel");
 const ErrorHandler = require("../utils/errorHandler");
 const sendEmail = require("../utils/nodeMailer");
 const sendToken = require("../utils/sendToken");
+const crypto = require("crypto");
 const uniqueOtp = require("../utils/uniqueOtp");
 
 // !  sending otp to email
@@ -103,7 +104,9 @@ exports.forgotPassword = async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler(400, "Email not regestered"));
   }
-  const resetToken = user.getResetPasswordToken();
+  const resetToken = user.getresetPasswordToken();
+
+  user.save({ validateBeforeSave: flase });
 
   // console.log(resetToken);
 
@@ -125,8 +128,127 @@ exports.forgotPassword = async (req, res, next) => {
       msg: "Link Sent To Email Sucessfully",
     });
   } catch (err) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
     return next(new ErrorHandler(404, err.message));
   }
 };
 
-//  ! resetPassword
+// ! resetPssword
+
+exports.resetPassoword = catchAsyncError(async (req, res, next) => {
+  const reseToken = await crypto
+    .createHash("sha256")
+    .update(req.params.token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken: reseToken,
+    resetPasswordExpireDate: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new ErrorHandler(404, "InvalidToken Or token has expired"));
+  }
+
+  if (req.body.password !== req.body.confirmpassword) {
+    return next(
+      new ErrorHandler(404, "password doesnt match with confirmpassword")
+    );
+  }
+
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  user.save();
+
+  return res.status(200).json({
+    sucess: true,
+    msg: "Password reset Successfully",
+  });
+});
+
+// ! Compltete Profile or addition detals
+exports.complteProfile = catchAsyncError(async (req, res, next) => {
+  const user = await User.findByIdAndUpdate(
+    { _id: req.user.user_id },
+    req.body,
+    {
+      new: true,
+      runValidators: true,
+      useFindAndModify: true,
+    }
+  );
+
+  if (!user) {
+    return next(new ErrorHandler(404, "Update failed try after some times"));
+  }
+
+  res.status(200).json({
+    sucess: true,
+    msg: "updated Successfully",
+    user,
+  });
+});
+
+// !  changePassword
+
+exports.changePassword = catchAsyncError(async (req, res, next) => {
+  const { oldPassword, newPassword, confirmpassword } = req.body;
+
+  const user = await User.findById({ _id: req.user.user_id }).select(
+    "+password"
+  );
+
+  if (!(await user.comparePassword(oldPassword))) {
+    return next(new ErrorHandler(404, "Incorrect Password"));
+  }
+
+  if (newPassword !== confirmpassword) {
+    return next(
+      new ErrorHandler(404, "password doesnt match with confimpassword")
+    );
+  }
+
+  user.password = newPassword;
+
+  user.save();
+
+  res.status(200).json({
+    sucess: true,
+    msg: "Password updated sucessfully",
+  });
+});
+
+//  ! getAll users
+
+exports.getAllusers = catchAsyncError(async (req, res, next) => {
+  const users = await User.find();
+
+  res.status(200).json({
+    suceess: true,
+    users,
+  });
+});
+
+// !update userRole - Admin
+exports.updateRole = catchAsyncError(async (req, res, next) => {
+  const user = await User.findById({ _id: req.params.id });
+
+  if (!user) {
+    return next(new ErrorHandler(404, "User Not exist"));
+  }
+
+  user.role = req.body.role;
+
+  user.save();
+
+  res.status(200).json({
+    sucess: true,
+    msg: "Role updated by successfuylyy",
+  });
+});
+
+// !
+
