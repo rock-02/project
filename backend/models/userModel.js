@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const JWT = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
@@ -18,6 +19,24 @@ const userSchema = new mongoose.Schema({
     minLength: 8,
     select: false,
   },
+  role: {
+    type: String,
+    default: 'user',
+  },
+  additionalDetails: {
+    firstName: {
+      type: String,
+    },
+    lastName: {
+      type: String,
+    },
+    dateOfBirth: {
+      type: String,
+    },
+    mobileNUmber: {
+      type: String,
+    },
+  },
   avatar: {
     public_id: {
       type: String,
@@ -26,13 +45,6 @@ const userSchema = new mongoose.Schema({
       type: String,
     },
   },
-  posts: [
-    {
-      name: {
-        type: String,
-      },
-    },
-  ],
   followers: [
     {
       type: mongoose.Types.ObjectId,
@@ -56,10 +68,10 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   resetPasswordExpire: {
-    type: String,
+    type: Date,
   },
 });
-userSchema.pre('save', async function () {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -78,6 +90,23 @@ userSchema.methods = {
         expiresIn: process.env.JWT_EXPIRE,
       }
     );
+  },
+
+  async comparePassword(password) {
+    return await bcrypt.compare(password, this.password);
+  },
+
+  getResetPasswordToken() {
+    const resetToken = crypto.randomBytes(10).toString('hex');
+
+    this.resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+
+    return resetToken;
   },
 
   async comparePassword(password) {

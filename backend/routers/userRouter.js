@@ -1,31 +1,44 @@
 const express = require('express');
-const { registerUser, login } = require('../controller/userController');
-
 const {
-  follow,
-  unfollow,
-  getFollowers,
-  getFollowing,
-  getUser,
-  approveRequest,
-} = require('../controller/follow');
+  signUp,
+  signIn,
+  mailOtp,
+  forgotPassword,
+  resetPassoword,
+  changePassword,
+  complteProfile,
+  getAllusers,
+  getSingleUser,
+  updateRole,
+  deleteUser,
+  logout,
+} = require('../controller/userController');
+const { route } = require('../app');
+const isLoggedIn = require('../middlewares/isloggedIn');
 
 const router = express.Router();
 
-router.post('/register', registerUser);
+router.post('/signup', signUp);
 
-router.post('/login', login);
+router.post('/signin', signIn);
 
-router.post('/follow/:id', follow);
+router.get('/signout', logout);
+router.post('/regester', mailOtp);
 
-router.post('/unfollow/:id', unfollow);
+router.post('/forgotpassword', forgotPassword);
 
-router.get('/followers', getFollowers);
+router.put('/reset/:token', resetPassoword);
 
-router.get('/following', getFollowing);
+router.route('/updatepassword').put(isLoggedIn, changePassword);
 
-router.get('/userInfo/:id', getUser);
+router.route('/compteprofile', isLoggedIn, complteProfile);
 
-router.post('/approve/:id', approveRequest);
+router.route('/admin/users').get(isLoggedIn, getAllusers);
+
+router.route('/admin/user/:id').get(isLoggedIn, getSingleUser);
+
+router.route('/admin/user/:id').get(isLoggedIn, updateRole);
+
+router.route('/admin/user/:id').delete(isLoggedIn, deleteUser);
 
 module.exports = router;

@@ -12,18 +12,19 @@ const postSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      default: 'Public',
       enum: ['Public', 'Private'],
+      default: 'Public',
     },
     caption: {
       type: String,
     },
     Comments: [
       {
-        comment: { type: String },
-        commentBy: { type: mongoose.Types.ObjectId, ref: 'User' },
+        type: mongoose.Types.ObjectId,
+        ref: 'Comment',
       },
     ],
+    views: { type: Number, default: 0 },
     likes: [
       {
         type: mongoose.Types.ObjectId,

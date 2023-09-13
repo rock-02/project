@@ -146,6 +146,37 @@ const approveRequest = async (req, res) => {
   }
 };
 
+const rejectRequest = async (req, res) => {
+  const { id: requestId } = req.params;
+  const currentId = req.user.user_id;
+  try {
+    const currentUser = await User.findOne({ _id: currentId });
+    const requestedUser = await User.findOne({ _id: requestId });
+
+    if (currentUser.followers.includes(requestId)) {
+      return res.send('request already approved');
+    }
+
+    if (requestedUser.following.includes(currentId)) {
+      return res.send('already following');
+    }
+
+    const currentUserUpdated = await User.findOneAndUpdate(
+      { _id: currentId },
+      {
+        $pull: {
+          followRequest: requestId,
+        },
+      },
+      { new: true, runValidators: true }
+    );
+
+    return res.json(currentUserUpdated);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 module.exports = {
   follow,
   unfollow,
@@ -153,4 +184,5 @@ module.exports = {
   getFollowing,
   getUser,
   approveRequest,
+  rejectRequest,
 };
