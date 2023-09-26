@@ -1,5 +1,5 @@
-const otpGenerator = require("otp-generator");
-const Otp = require("../models/otpModel");
+const otpGenerator = require('otp-generator');
+const Otp = require('../models/otpModel');
 
 const generateOtp = () => {
   const otp = otpGenerator.generate(6, {

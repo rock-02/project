@@ -1,35 +1,27 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
-const JWT = require("jsonwebtoken");
-const crypto = require("crypto");
+const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
+const JWT = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, "Name required"],
+    required: [true, 'Name required'],
   },
   email: {
     type: String,
-    required: [true, "Email required"],
+    required: [true, 'Email required'],
     unique: true,
   },
   password: {
     type: String,
-    required: [true, "Email required"],
+    required: [true, 'Email required'],
     minLength: 8,
     select: false,
   },
-  avatar: {
-    public_id: {
-      type: String,
-    },
-    public_url: {
-      type: String,
-    },
-  },
   role: {
     type: String,
-    default: "user",
+    default: 'user',
   },
   additionalDetails: {
     firstName: {
@@ -45,23 +37,30 @@ const userSchema = new mongoose.Schema({
       type: String,
     },
   },
-  posts: [
-    {
-      name: {
-        type: String,
-      },
+  avatar: {
+    public_id: {
+      type: String,
     },
-  ],
+    public_url: {
+      type: String,
+    },
+  },
   followers: [
     {
       type: mongoose.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
   ],
   following: [
     {
       type: mongoose.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
+    },
+  ],
+  followRequest: [
+    {
+      type: mongoose.Types.ObjectId,
+      ref: 'User',
     },
   ],
 
@@ -69,18 +68,16 @@ const userSchema = new mongoose.Schema({
     type: String,
   },
   resetPasswordExpire: {
-    type: String,
+    type: Date,
   },
 });
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) {
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
     return next();
   }
   this.password = await bcrypt.hash(this.password, 10);
 });
 userSchema.methods = {
-  // ! json web Token
-
   getJwtToken() {
     return JWT.sign(
       {
@@ -95,15 +92,17 @@ userSchema.methods = {
     );
   },
 
-  // !reset Password Token
+  async comparePassword(password) {
+    return await bcrypt.compare(password, this.password);
+  },
 
   getResetPasswordToken() {
-    const resetToken = crypto.randomBytes(10).toString("hex");
+    const resetToken = crypto.randomBytes(10).toString('hex');
 
     this.resetPasswordToken = crypto
-      .createHash("sha256")
+      .createHash('sha256')
       .update(resetToken)
-      .digest("hex");
+      .digest('hex');
 
     this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
 
@@ -114,5 +113,5 @@ userSchema.methods = {
     return await bcrypt.compare(password, this.password);
   },
 };
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model('User', userSchema);
 module.exports = User;

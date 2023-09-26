@@ -1,4 +1,4 @@
-const catchAsyncError = require("../middlewares/catchAsyncError");
+const catchAsyncError = require("../middlewares/catchAsynError");
 const Otp = require("../models/otpModel");
 const User = require("../models/userModel");
 const ErrorHandler = require("../utils/errorHandler");
@@ -11,7 +11,7 @@ const uniqueOtp = require("../utils/uniqueOtp");
 
 exports.mailOtp = async (req, res, next) => {
   const { email } = req.body;
-
+  console.log(email);
   const otp = await uniqueOtp(email);
 
   const optns = {
@@ -24,9 +24,10 @@ exports.mailOtp = async (req, res, next) => {
     await sendEmail(optns);
     res.status(200).json({
       success: true,
-      message: `Mail sent to ${user.email} SuccessFully`,
+      message: `Mail sent to ${email} SuccessFully`,
     });
   } catch (err) {
+    console.log(err);
     return next(
       new ErrorHandler(404, "Otp verification failed Try after some time")
     );
@@ -37,7 +38,7 @@ exports.mailOtp = async (req, res, next) => {
 
 exports.signUp = catchAsyncError(async (req, res, next) => {
   const { name, email, password, otp } = req.body;
-
+  console.log(req.body);
   const exceptedOtp = await Otp.find({ email: email })
     .sort({ createdAt: -1 })
     .limit(1);
@@ -64,6 +65,7 @@ exports.signUp = catchAsyncError(async (req, res, next) => {
 
 exports.signIn = catchAsyncError(async (req, res, next) => {
   const { email, password } = req.body;
+  console.log(req.body);
 
   if (!email || !password) {
     return next(new ErrorHandler(404, "All fields are compusory"));
@@ -74,11 +76,12 @@ exports.signIn = catchAsyncError(async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler(404, "EMail is Not regestered with us"));
   }
-
-  if (!user.comparePassword(password)) {
+  console.log(user);
+  if (! await user.comparePassword(password)) {
+    console.log("failed");
     return next(new ErrorHandler(404, "Invalid Email or Password"));
   }
-
+  console.log(user);
   sendToken(user, res, 200);
 });
 
@@ -104,9 +107,9 @@ exports.forgotPassword = async (req, res, next) => {
   if (!user) {
     return next(new ErrorHandler(400, "Email not regestered"));
   }
-  const resetToken = user.getresetPasswordToken();
+  const resetToken = user.getResetPasswordToken();
 
-  user.save({ validateBeforeSave: flase });
+  user.save({ validateBeforeSave: false });
 
   // console.log(resetToken);
 
@@ -137,16 +140,19 @@ exports.forgotPassword = async (req, res, next) => {
 // ! resetPssword
 
 exports.resetPassoword = catchAsyncError(async (req, res, next) => {
-  const reseToken = await crypto
+  const resetToken = await crypto
     .createHash("sha256")
     .update(req.params.token)
     .digest("hex");
 
+  console.log(req.params.token, resetToken);
+  console.log(Date.now());
   const user = await User.findOne({
-    resetPasswordToken: reseToken,
-    resetPasswordExpireDate: { $gt: Date.now() },
+    resetPasswordToken: resetToken,
+    resetPasswordExpire: { $gt: Date.now() },
   });
 
+  console.log(user);
   if (!user) {
     return next(new ErrorHandler(404, "InvalidToken Or token has expired"));
   }
@@ -280,6 +286,3 @@ exports.deleteUser = catchAsyncError(async (req, res, next) => {
     user,
   });
 });
-
-
-

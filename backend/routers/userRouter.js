@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const {
   signUp,
   signIn,
@@ -11,40 +11,34 @@ const {
   getSingleUser,
   updateRole,
   deleteUser,
-} = require("../controller/userController");
-const { route } = require("../app");
-const isLoggedIn = require("../middlewares/isloggedIn");
+  logout,
+} = require('../controller/userController');
+const { route } = require('../app');
+const isLoggedIn = require('../middlewares/isloggedIn');
 
 const router = express.Router();
 
-router.post("/signup", signUp);
+router.post('/signup', signUp);
 
-router.post("/signin", signIn);
+router.post('/signin', signIn);
 
-router.post("/regester", mailOtp);
+router.get('/signout', logout);
+router.post('/regester', mailOtp);
 
-router.post("/forgotpassword", forgotPassword);
+router.post('/forgotpassword', forgotPassword);
 
-router.put("/reset/:token", resetPassoword);
+router.put('/reset/:token', resetPassoword);
 
-router.route("/updatepassword").put(isLoggedIn, changePassword);
+router.route('/updatepassword').put(isLoggedIn, changePassword);
 
-router.route("/compteprofile", isLoggedIn, complteProfile);
+router.route('/compteprofile', isLoggedIn, complteProfile);
 
-router
-  .route("/admin/users")
-  .get(isLoggedIn, isAuthorizedRoles("adimn"), getAllusers);
+router.route('/admin/users').get(isLoggedIn, getAllusers);
 
-router
-  .route("/admin/user/:id")
-  .get(isLoggedIn, isAuthorizedRoles("adimn"), getSingleUser);
+router.route('/admin/user/:id').get(isLoggedIn, getSingleUser);
 
-router
-  .route("/admin/user/:id")
-  .get(isLoggedIn, isAuthorizedRoles("adimn"), updateRole);
+router.route('/admin/user/:id').get(isLoggedIn, updateRole);
 
-router
-  .route("/admin/user/:id")
-  .delete(isLoggedIn, isAuthorizedRoles("adimn"), deleteUser);
+router.route('/admin/user/:id').delete(isLoggedIn, deleteUser);
 
 module.exports = router;
